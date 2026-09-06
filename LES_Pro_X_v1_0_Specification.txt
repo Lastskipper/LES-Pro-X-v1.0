@@ -1,0 +1,1035 @@
+================================================================================
+LES PRO X v1.0 - INSTITUTIONAL ICT/SMC EXPERT ADVISOR
+MetaTrader 5 - Gold Day Trading System
+================================================================================
+
+CORE PHILOSOPHY
+================================================================================
+Build a production-quality MetaTrader 5 Expert Advisor (MQL5) called LES Pro X v1.0.
+The code must be modular, optimized, object-oriented where appropriate, heavily 
+commented, and compile without warnings or errors under the latest MetaEditor.
+
+This is NOT a retail indicator-based EA.
+This IS an ICT/SMC institutional execution engine.
+
+The EA should think like an institutional trader:
+- Never execute trades simply because of: BOS, CHOCH, FVG, Liquidity sweep
+- Every trade must pass the complete institutional decision framework
+- If any layer fails, reject the trade immediately
+
+
+LES DECISION ENGINE - CORE EVALUATION SEQUENCE
+================================================================================
+Every trade must pass through this exact sequence in order:
+
+1. Market Environment
+2. Institutional Narrative
+3. Market Objective
+4. Liquidity Target
+5. Market Structure
+6. Premium / Discount
+7. Kill Zone Timing
+8. Execution Model
+9. Risk Validation
+10. Trade Quality
+11. Execute Trade
+
+If ANY layer fails → REJECT TRADE immediately
+No exceptions, no overrides, no force-entries
+
+
+MULTI-TIMEFRAME ENGINE
+================================================================================
+Use all eight timeframes in a tiered hierarchy:
+
+Tier 1 (Macro Bias):
+- Monthly      → Macro range location, dominant institutional bias
+- Weekly       → Major swing points, continuation vs reversal bias
+- Daily        → Daily narrative anchor, day-type classification
+
+Tier 2 (Intermediate Structure):
+- H4           → Intermediate directional structure, delivery path
+- H1           → Executable directional bias, session structure
+
+Tier 3 (Setup Framework):
+- M15          → Setup framework, sweep confirmation, structure-shift zone
+- M5           → Entry trigger structure, OB/FVG interaction, stop placement
+
+Tier 4 (Precision Entry):
+- M1           → Precision entry refinement, micro-confirmation
+
+CRITICAL RULE:
+- Higher timeframes define the big bias
+- Lower timeframes refine the entry
+- All timeframes must work together, not separately
+- No timeframe is allowed to operate as an island
+
+
+MARKET OBJECTIVE ENGINE
+================================================================================
+The EA must know what price is trying to reach TODAY.
+
+Possible objective targets:
+- Previous Day High / Low
+- Previous Week High / Low
+- Monthly High / Low
+- Equal Highs / Equal Lows
+- Asian High / Low
+- London High / Low
+- New York High / Low
+- Internal liquidity
+- External liquidity
+- Resting liquidity
+
+CRITICAL BEHAVIOR:
+If today's main objective is already COMPLETED:
+- Reduce or BLOCK new trades in that direction
+- Mark objective_status as COMPLETED
+- Lower trade probability significantly
+- Only allow new entries if fresh narrative develops
+
+
+LIQUIDITY MAP ENGINE
+================================================================================
+Detect and track ALL liquidity types:
+
+Institutional Liquidity Signatures:
+- Equal Highs
+- Equal Lows
+- Buy-side liquidity (stops resting above recent highs)
+- Sell-side liquidity (stops resting below recent lows)
+- Internal liquidity (pools inside current range)
+- External liquidity (pools outside/beyond range)
+
+Session-Specific Liquidity:
+- Asian session high/low
+- London session high/low
+- New York session high/low
+- Resting liquidity
+
+Liquidity State Tracking:
+- Untouched
+- Partially swept
+- Fully swept
+- Engineered (deliberately built up to be raided)
+- Stacked (multiple pools clustered together)
+
+RANKING LOGIC:
+Rank ALL liquidity by:
+1. Distance from current price
+2. Liquidity size/cleanliness
+3. Number of previous tests without sweep
+4. Age (lose relevance over time)
+5. Trend alignment
+6. Session relevance
+7. HTF importance
+
+CORE RULE:
+Prefer the NEAREST STRONG UNSWEPT target in trade direction
+Not the biggest pool on the chart
+Not the furthest external target
+But the closest credible, reachable, untouched one
+
+
+PREMIUM / DISCOUNT ENGINE
+================================================================================
+Automatically calculate the current DEALING RANGE.
+
+Four zones to identify:
+- Premium = Expensive area (upper half of range)
+- Discount = Cheap area (lower half of range)
+- Equilibrium = Middle (neutral)
+- OTE Zone = Optimal retracement area (~61.8-79% Fibonacci retrace)
+
+BEHAVIORAL RULES:
+- Longs should PREFER discount (or OTE-within-discount)
+- Shorts should PREFER premium (or OTE-within-premium)
+- Equilibrium is neutral-to-lower-quality
+- OTE specifically increases setup quality (multiplier, not standalone trigger)
+
+DEALING RANGE SOURCES (dynamic selection):
+- Higher-timeframe anchor (H4/D1-level swing)
+- Current session structure
+- Last meaningful expansion leg
+- Current external structure
+- Highest/Lowest recent swing
+
+
+INSTITUTIONAL NARRATIVE ENGINE
+================================================================================
+Classify market INSTITUTIONAL PHASE:
+
+Eight classifications (continuous update):
+1. Accumulation    → Price building inventory sideways, quietly, inside range
+2. Manipulation    → Deliberate false move to trap traders, generate liquidity
+3. Distribution    → Institutions unloading after run-up
+4. Repricing       → Fast move toward fair value after imbalance
+5. Delivery        → Clean directional move toward known objective
+6. Expansion       → Strong impulsive phase, usually following compression
+7. Continuation    → Existing directional move remains structurally valid
+8. Reversal        → Directional transfer, typically post-liquidity-sweep
+
+INPUTS TO CLASSIFICATION:
+- HTF bias
+- Session timing
+- Liquidity sweep behavior
+- Structure breaks (BOS/CHoCH/MSS quality)
+- Reclaim vs failure behavior
+- Volatility expansion/compression
+- Premium/discount location
+
+TRADING EFFECT:
+Narrative doesn't fire entries itself.
+It decides which categories of setup are PERMITTED.
+
+
+DAILY NARRATIVE ENGINE
+================================================================================
+Every day classify what KIND of day is forming:
+
+Six day-type classifications:
+
+1. TREND DAY
+   Conditions: Strong HTF bias, clear objective, Asia builds stable range
+               London/NY expands in trend direction
+   Behavior: Favor continuation entries, allow pullback models
+   
+2. EXPANSION DAY
+   Conditions: Tight compression, untapped liquidity, delivery beginning
+   Behavior: Favor breakout/repricing models, expect strong displacement
+   
+3. REVERSAL DAY
+   Conditions: Liquidity sweep completed, HTF extreme reached
+               Structure shift appears right after sweep
+   Behavior: Favor reversal models, require stronger confirmation
+   
+4. RANGE DAY
+   Conditions: No clean HTF objective, price trapped in well-defined range
+               Weak displacement, repeated liquidity tapping
+   Behavior: Reduce trend-following, allow mean-reversion only
+             Lower trade frequency, tighten quality bar
+   
+5. NEUTRAL DAY
+   Conditions: Mixed signals across timeframes, no dominant narrative
+               Weak session intent, conflicting readings
+   Behavior: BLOCK most trades, only allow exceptional setups
+   
+6. NEWS DAY
+   Conditions: High-impact scheduled event, compression pre-release
+               Abnormal behavior post-release
+   Behavior: Delay/block trading around event, require post-news stabilization
+
+
+KILL ZONE ENGINE
+================================================================================
+Recognize trading WINDOWS - timing matters.
+
+Primary Windows:
+- Asian Session           → Range building, liquidity creation phase
+- London Open            → HIGH probability directional move window
+- London Close           → Secondary, often reversal-prone
+- New York Open          → Second major volatility window
+- New York Lunch         → WORST window, avoid or downgrade heavily
+- PM Session             → Late-day window, lower priority
+- Silver Bullet Windows  → Specific 20-60 minute sub-windows (high probability)
+
+ADVANCED SEQUENCING LOGIC:
+- Did Asia build clean range that London can sweep?
+- Did London already deliver session's main move?
+- Is it too late for clean entry into day's move?
+- Is this a dead zone with low win probability?
+
+CORE RULE:
+Trading allowed in approved windows UNLESS setup is exceptional.
+Mediocre setup outside window = REJECT
+A+ setup outside window = MAYBE ALLOW (rare)
+
+
+EXECUTION MODELS - FOUR DISTINCT PATTERNS
+================================================================================
+
+MODEL 1: SENTINEL (Liquidity Sweep + Reversal)
+- Waits for liquidity pool to get SWEPT
+- Then waits for structure shift (MSS/CHoCH)
+- Often retests before entry
+- Lowest trade frequency, highest quality bar
+- Pairs with: Reversal-Day narrative, OTE-zone reactions
+- MOST CONSERVATIVE
+
+MODEL 2: VANGUARD (Trend Continuation After Pullback)
+- Built for already-trending markets
+- Waits for pullback into discount/premium or order block
+- Enters on resumption
+- Medium frequency
+- Dominates on Trend Days
+- BALANCED
+
+MODEL 3: CATALYST (BOS + Retest + Acceptance)
+- Requires Break of Structure
+- Then retest of broken level
+- Then genuine acceptance beyond it (not just poking)
+- Built around confirmed structural breaks
+- Medium frequency
+- TECHNICAL
+
+MODEL 4: IGNITION (Compression Breakout + Expansion)
+- Watches for tight compression/consolidation
+- Enters on breakout into expansion
+- EARLIEST entry timing
+- HIGHEST false-start risk
+- Needs strictest filtering
+- AGGRESSIVE
+
+EACH MODEL HAS:
+- Own detection logic
+- Setup state machine
+- Entry rules
+- Confirmation requirements
+- Invalid/cancel conditions
+
+SHARED TRIGGER COMPONENTS (used by all models):
+- Liquidity sweep
+- MSS / CHoCH / BOS
+- Displacement candle
+- Fair Value Gap reaction
+- Order Block reaction
+- Rejection candle
+- Breaker/mitigation block behavior
+- Session high/low reclaim
+- Micro premium/discount alignment
+
+
+TRADE QUALITY ENGINE
+================================================================================
+Grade every setup as:
+
+A+  → Exceptional institutional alignment
+A   → Strong, tradable (minor softness in 1-2 factors only)
+B   → Acceptable but not ideal (noticeably weaker link)
+C   → Weak (technically valid but thin confluence)
+Reject → Fails minimum bar entirely
+
+SCORING INPUTS:
+1. HTF/MTF alignment clarity
+2. Institutional Narrative alignment
+3. Daily Narrative quality/fit
+4. Market Objective clarity
+5. Liquidity target strength/distance
+6. Structure quality
+7. Premium/discount location quality
+8. Order Block quality (where relevant)
+9. Fair Value Gap quality (where relevant)
+10. Kill zone timing quality
+11. Execution model confidence
+12. Displacement quality
+13. Volatility suitability
+14. News risk status
+15. Risk/reward profile
+16. Historical performance of setup type (from Adaptive Engine)
+
+OUTPUTS REQUIRED:
+- tradeQualityScore (0-100)
+- tradeQualityGrade (A+/A/B/C/Reject)
+- setupStrength
+- confluenceCount
+- weakestLayer (identifies weakest component)
+- bestSupportingLayer (identifies strongest component)
+- minimumThresholdPassed (bool)
+
+CRITICAL: Weakest and best layers must be identified, not just score
+
+
+RISK ENGINE
+================================================================================
+STOPS AND TARGETS FROM STRUCTURE, NOT ARBITRARY VALUES:
+
+Stop Loss References:
+- Beyond sweep extreme (if Sentinel triggered off sweep)
+- Beyond structural invalidation point
+- Beyond order block edge
+- Beyond FVG invalidation
+- ATR-adjusted buffer to prevent stop clustering
+
+Take Profit References (from Liquidity Map + OB/FVG):
+- Nearest opposing liquidity
+- Internal liquidity
+- External liquidity
+- Session high/low
+- Opposing order block
+- Opposing FVG
+- DEFAULT: Partial close at internal target, full close at external target (TP1/TP2)
+
+DYNAMIC POSITION SIZING:
+- Sized off account risk % and actual stop distance
+- NOT fixed lot size
+- Per-grade scaling:
+  * A+ → Maximum allowed risk
+  * A  → Standard risk
+  * B  → Reduced risk
+  * C  → Minimum risk
+  * Reject → No trade
+
+RISK CONTROLS - COMPLETE LIST:
+
+Account Circuit Breakers:
+- Maximum risk per trade
+- Maximum daily loss / daily lockout
+- Maximum weekly loss / weekly lockout
+- Maximum drawdown protection
+- Maximum simultaneous open trades
+- Session exposure cap
+- Equity curve protection
+
+Trade Lifecycle Management:
+- Break-even movement (after justified development)
+- Partial close at TP1
+- Trailing stop (structure-based or volatility-based)
+- Time stop (exit if trade hasn't developed)
+- Exit on structural invalidation
+
+Behavioral Protections:
+- Consecutive loss protection (cooldown or reduced size)
+- Consecutive win scaling CAP (prevent overconfidence)
+- Correlated trade prevention
+- Lockout after daily objective complete
+
+Execution Filters:
+- Spread filter / slippage tolerance
+- Volatility filter
+- News-event blocking
+- Broker quality checks
+
+
+STATISTICS ENGINE
+================================================================================
+Track and export EVERY detail:
+
+Per-Trade Recording:
+- Trade ID, Date, Time, Symbol, Direction
+- Execution model used
+- Daily narrative type, Institutional narrative type
+- Kill zone active
+- HTF bias, Liquidity target type, Structure trigger type
+- Premium/discount location
+- Stop loss, Take profit, RR ratio
+- Win/loss outcome, Partial-profit detail
+- MFE (Maximum Favorable Excursion)
+- MAE (Maximum Adverse Excursion)
+- Slippage/spread at entry
+- Volatility regime, News condition
+- Trade quality grade
+- Exit reason
+
+Performance Metrics Calculated:
+- Win rate
+- Profit factor
+- Expectancy
+- Average RR
+- Max drawdown
+- Consecutive wins/losses
+- Performance by: Session, Weekday, Execution model, Daily narrative
+- Performance by: Institutional narrative, Trade grade, Volatility, Month
+- Sharpe ratio, Sortino ratio, Recovery factor
+- Average hold time, Average trade duration
+
+STORAGE:
+- CSV export (for offline analysis)
+- On-chart summary (for dashboard)
+- Rolling recent-trade analysis (separate from all-time)
+- Persistence between EA restarts
+
+
+ADAPTIVE ENGINE
+================================================================================
+Learn from historical performance - RULE-BASED ONLY, NOT MACHINE LEARNING:
+
+What can be adapted:
+- Best/worst weekday (reduce risk or block marginal trades on worst days)
+- Best/worst session
+- Best execution model (suppress underperformers)
+- Best daily narrative type
+- Best volatility regime
+- Best RR profile
+- Best month
+
+Examples of adaptive logic:
+- If Vanguard performs poorly on News Days → reduce Vanguard score ONLY in that context
+- If Sentinel performs best during London Open on Trend Days → increase confidence there
+- If Expansion underperforms in extreme volatility → tighten rules for that combo
+- If a weekday underperforms → reduce risk or block B/C-grade trades (not A+)
+
+FORBIDDEN ADAPTATIONS:
+- Override structural failures
+- Ignore hard risk rules
+- Force trades against HTF bias
+- Invent new trade logic
+- Only make system MORE selective, never looser
+
+SAFETY RULES:
+- Require minimum sample size before adapting (not 4 trades)
+- Use rolling AND long-term windows
+- Cap adaptation strength per step
+- Allow manual reset and log every change
+
+
+SMART MONEY CONCEPTS ENGINE
+================================================================================
+Implement complete SMC framework:
+
+Break of Structure (BOS)
+- Price breaks previous significant high/low in trend direction
+- Confirms trend continuing
+
+Change of Character (CHoCH)
+- First break against prevailing trend
+- Early warning sign reversal might start
+- Not yet confirmed
+
+Market Structure Shift (MSS)
+- Stronger, more decisive than CHoCH
+- Real displacement behind it
+- Closer to confirmation
+
+Internal vs External Structure
+- Internal: Smaller, frequent swings inside range (noise-prone)
+- External: Larger, range-defining swings (what actually matters)
+- Distinction prevents treating minor wiggles same as major breaks
+
+Protected High / Protected Low
+- High/low unlikely to be taken out soon
+- Breaking it would contradict confirmed structure
+
+Premium Swing / Discount Swing
+- Swings specifically in premium or discount zone
+
+SCORING STRUCTURE BREAKS:
+- Displacement (how strong/fast away from swing)
+- Follow-through (did price keep going or stall?)
+- Reaction quality (sharp wick vs messy grind)
+- Liquidity taken (actual stops triggered?)
+- Body-confirmation (not just wick poking through)
+- Protection formed (new protected high/low?)
+
+
+ORDER BLOCK ENGINE
+================================================================================
+Institutional order-placement footprints:
+
+Order Block Types:
+- Bullish OB / Bearish OB (base type by direction)
+- Fresh OB (untested, highest quality)
+- Mitigated OB (already retested, interest partially used)
+- Breaker Block (failed, flipped role)
+- Reclaimed OB (broken but price came back, restored validity)
+- Nested OB (smaller, lower-TF OB inside larger one)
+- Invalidated OB (broken decisively, drop from tracking)
+
+Per-Block Metadata:
+- Creation time
+- Price bounds (candle high/low)
+- Bullish/bearish type
+- Freshness (untested vs how many tests)
+- Number of tests
+- Mitigation status
+- Strength score
+- Quality rank
+
+Quality Scoring:
+- Strength of displacement move after block
+- Candle body quality (clean vs messy)
+- Timeframe importance (H4 > M5)
+- Number of retests (more tests = weaker)
+- Freshness score
+
+RULE: Only high-quality, fresh blocks influence decisions
+
+
+FAIR VALUE GAP ENGINE
+================================================================================
+Imbalance zones created by fast moves:
+
+Fair Value Gap Definition
+- Bullish FVG: High of candle 1 < Low of candle 3 (with candle 2 as displacement)
+- Bearish FVG: Low of candle 1 > High of candle 3 (mirror)
+- Empty space represents unfinished business
+
+FVG Types:
+- Bullish FVG / Bearish FVG (base)
+- Nested FVG (smaller FVG inside larger one)
+- Inversion FVG (failed FVG that flips role)
+- Consecutive FVG (multiple stacked, stronger signature)
+- Balanced Price Range (BPR) (overlapping bull + bear FVG)
+
+Fill States:
+- Unfilled (completely untouched)
+- Partially filled (partway into gap)
+- Filled (fully traded through)
+- Invalid (broken decisively)
+
+Quality Scoring:
+- Size (larger gap = stronger imbalance)
+- Age (fresher = higher weight)
+- Momentum (strength of displacement candle)
+- Trend alignment
+- Session location
+
+TRADING EFFECT:
+- Entry refinement zone (precise price within broader context)
+- Target (where move statistically likely to react)
+
+
+LIQUIDITY SWEEP ENGINE
+================================================================================
+Real-time detection of liquidity raids:
+
+Sweep Types:
+- Buy-side raid / Sell-side raid (directional label)
+- Stop hunt (generic behavioral category)
+- Liquidity grab (surgical, single-wick version)
+- Engineered liquidity (deliberately built up beforehand)
+- Single/Double/Triple sweep (how many attempts/pools)
+- Failed sweep (didn't actually take level out)
+- Liquidity vacuum (sparse thin area)
+
+MECHANICAL DETECTION:
+Price trades beyond tracked level (wick or penetration)
+THEN closes back inside prior range (key: snap-back defines sweep)
+Closes that hold beyond = closer to genuine breakout
+Closes that snap back = signature of sweep
+
+Classification AFTER Detection:
+- Reversal (sweep + structure shift opposite direction) ← STRONGEST
+- Continuation (sweep + original direction resumes)
+- Distribution/Accumulation (sweep + sideways absorption)
+- Fake breakout (sweep + reversal back through level)
+
+CRITICAL RULE:
+Every sweep stored with outcome classification
+Not just "successful" sweeps
+Used later for Adaptive Engine pattern discovery
+
+
+VOLATILITY INTELLIGENCE ENGINE
+================================================================================
+Measure and classify current volatility:
+
+Metrics Tracked:
+- ATR Expansion
+- ATR Compression
+- Daily Range
+- ADR (Average Daily Range)
+- Weekly Range
+- Session Volatility
+- News Volatility
+
+Classification States:
+- Low (compressed relative to average)
+- Normal (average level)
+- High (expanded above average)
+- Extreme (post-news spike)
+
+Trading Effects:
+- Low volatility → Tighter stops, higher precision
+- High volatility → Wider stops, lower frequency
+- Extreme → Stand aside until stabilization
+- Adjust TP/SL and trade frequency per regime
+
+
+MARKET CYCLE ENGINE
+================================================================================
+Identify current market cycle:
+
+Five Cycle Phases:
+1. Accumulation (quiet range building)
+2. Markup (bullish directional delivery)
+3. Distribution (quiet unloading phase)
+4. Markdown (bearish directional delivery)
+5. Re-Accumulation (beginning next cycle)
+
+Per-Cycle Analysis:
+- Cycle maturity (how far into current phase)
+- Probability of continuation
+- Probability of reversal
+- Expected duration
+
+TRADING FILTER: Use cycle maturity to adjust confidence and risk
+
+
+DELIVERY ALGORITHM ENGINE
+================================================================================
+How price is currently being delivered:
+
+Classification States:
+- Expansion (strong impulsive phase)
+- Retracement (pullback into trend)
+- Accumulation (quiet range building)
+- Distribution (quiet unloading)
+- Repricing (fast move to fair value)
+- Manipulation (false move to trap)
+- Consolidation (tight sideways)
+- Trending (clean directional flow)
+- Corrective (pullback within trend)
+- Impulsive (strong displacement)
+
+Per-State Metadata:
+- Confidence score
+- Expected behavior
+- Likely targets
+- Appropriate entry models
+
+
+MANIPULATION ENGINE
+================================================================================
+Detect institutional manipulation:
+
+Manipulation Types to Identify:
+- Stop Hunts (designed to trigger stops)
+- Liquidity Grabs (taking liquidity for orders)
+- False Breakouts (wick through, snap back)
+- False BOS / Failed MSS
+- Engineered Liquidity (deliberately built pools)
+- Fake Session Breakouts
+- News Manipulation (behavior around calendar events)
+
+Classification:
+- Bullish manipulation
+- Bearish manipulation
+- Neutral manipulation (taps both sides)
+
+TRADING RULE: REJECT trades during unresolved manipulation
+
+
+NEWS & MACRO FILTER
+================================================================================
+Macroeconomic awareness for gold trading:
+
+High-Impact Events to Monitor:
+- FOMC (Federal Reserve decision)
+- CPI (Consumer Price Index)
+- PPI (Producer Price Index)
+- PCE (Personal Consumption Expenditures)
+- NFP (Non-Farm Payroll)
+- GDP (Gross Domestic Product)
+- Central Bank Speeches
+- Interest Rate Decisions
+
+Trading Behavior Around Events:
+BEFORE release:
+- Reduce risk
+- Delay execution
+- Block trading if configured
+
+DURING release:
+- Automatic trade closure if triggered
+- Prevent new entries
+
+AFTER release:
+- Wait for stabilization
+- Require clear setup resumption
+- Resume with confidence adjustment
+
+BLACKOUT WINDOWS:
+- 30-60 minutes pre-release (compression phase)
+- 30-60 minutes post-release (absorption phase)
+
+
+EXECUTION PRECISION ENGINE
+================================================================================
+Precise entry rules and location validation:
+
+Entry Requirements Checklist:
+1. ✓ HTF Bias from Engine 2
+2. ✓ Market Narrative from Engine 3
+3. ✓ Daily Narrative permits this model
+4. ✓ Objective still valid
+5. ✓ Liquidity target identified
+6. ✓ BOS or MSS confirmed
+7. ✓ Order Block identified
+8. ✓ Fair Value Gap support (where applicable)
+9. ✓ Premium/Discount location correct
+10. ✓ Kill Zone active
+11. ✓ Confirmation candle present (if required by model)
+
+Per-Setup Calculation:
+- Best Entry Price
+- Best Stop Loss Location
+- Best Take Profit #1 (TP1)
+- Best Take Profit #2 (TP2)
+- Expected Risk:Reward
+- Setup Quality Grade
+
+REJECTION RULES:
+- Poor location (wrong half of range)
+- Weak displacement
+- Conflicting structure
+- Insufficient liquidity
+- Excessive risk required
+- Historical underperformance
+
+
+DYNAMIC TARGET ENGINE
+================================================================================
+Automatic TP calculation, not fixed RR:
+
+TP1 Candidates (Partial Profit Target):
+- Nearest opposing liquidity pool
+- Internal liquidity zone
+- Opposing Order Block
+- Opposing Fair Value Gap
+- Session pivot level
+- Equal High/Low
+
+TP2 Candidates (Final Target):
+- Major external liquidity
+- Weekly High/Low
+- Daily High/Low
+- Major Order Block
+- Session High/Low
+- Market Objective
+
+RANKING LOGIC:
+- Closest valid institutional target = TP1
+- Next major liquidity objective = TP2
+
+ADAPTIVE: TP levels adjust if objective marked complete or session end approaches
+
+
+POSITION MANAGEMENT ENGINE
+================================================================================
+Live trade management from entry to close:
+
+Management Functions:
+
+Partial Take Profit:
+- Close portion at TP1 (nearest valid target)
+- Let remainder ride to TP2 (larger objective)
+- Timing: when TP1 hits or confirmed within range
+
+Break-Even Movement:
+- Move stop to entry once sufficient profit accrued
+- Gate to: after TP1 hits OR after X risk-multiples earned
+- Prevent early BE movement (kills trades on retracement)
+
+Trailing Stop (Structure-Based):
+- Move stop to just beyond most recent protected swing
+- Or ATR-adjusted trail (tighter low vol, wider high vol)
+- Don't trail through noise, only confirmed swings
+
+Target Reduction:
+- If objective nearly complete, tighten TP
+- Avoid low-probability chasing past delivered objective
+- Session-aware (don't carry past session boundary)
+
+Exit on Invalidation:
+- If protected level breaks before stop, exit immediately
+- Setup reasoning invalidated = exit trigger (before SL hit)
+- Don't wait for arbitrary SL price
+
+Time Exit:
+- Day-trader doesn't expect multi-session holds
+- Exit if no development within expected window
+- Prevent "zombie" trades going nowhere for hours
+
+Session-End Exit:
+- Flatten before session boundary (if configured)
+- Avoid carrying into different liquidity/volatility profile
+
+Emergency Exit:
+- Triggered by extreme news or abnormal spread
+- Live mirror of Engine 1's entry-time environment gate
+- Pre-entry condition deterioration = mid-trade exit
+
+HANDOFF: On full close, complete lifecycle record goes to Statistics Engine
+
+
+TRADE JOURNAL INTELLIGENCE
+================================================================================
+Automatic detailed trade logging:
+
+Per-Trade Record:
+- Trade ID
+- Entry Date/Time
+- Symbol, Direction
+- Execution Model
+- Daily Narrative Type
+- Institutional Narrative Type
+- Market Objective targeted
+- Liquidity Target type
+- Entry Reason (detailed)
+- Premium/Discount location
+- Kill Zone active
+- Entry Price, Stop Loss, Take Profit
+- Risk, Reward, R:R Ratio
+- Entry Session, Weekday
+- Volatility Regime
+- News Event status
+- Trade Quality Grade
+- Exit Date/Time
+- Exit Reason (detailed)
+- Exit Price
+- Profit/Loss, Win/Loss
+- Slippage, Spread incurred
+- MFE, MAE
+- Trade Duration
+- Result classification
+- Management actions taken
+- Lessons learned
+
+EXPORT: CSV format for offline analysis and pattern discovery
+
+
+DASHBOARD ENGINE
+================================================================================
+Professional MT5 real-time visualization:
+
+Primary Display Panel:
+- Current Market Bias (with confidence)
+- Current Institutional Narrative
+- Current Daily Narrative
+- Current Market Objective
+- Current Liquidity Target
+- Current Market Structure State
+- Current Kill Zone (with session info)
+- Current Execution Model (if setup detected)
+- Trade Quality Grade (if setup detected)
+- Current Premium/Discount Status
+
+Secondary Panel:
+- HTF Bias (per timeframe)
+- Session High/Low/Mid/Range
+- ATR (current, average)
+- Spread (current, average)
+- Current Risk % (if trade open)
+- Current RR (if trade open)
+- Protection Levels (if trade open)
+
+Performance Panel:
+- Open Positions (count, details)
+- Daily PnL
+- Weekly PnL
+- Monthly PnL
+- Win Rate (session, today)
+- Profit Factor
+- Consecutive Wins/Losses
+- Max Drawdown
+- Equity Curve (mini chart)
+
+DESIGN: Professional institutional appearance, real-time updates
+
+
+CODE REQUIREMENTS
+================================================================================
+ARCHITECTURE & QUALITY:
+
+✓ Use classes and objects where appropriate
+✓ Separate modules (one concept = one file/class)
+✓ Zero duplicated functions
+✓ Zero duplicated logic
+✓ No repainting EVER
+✓ No future-data leakage EVER
+✓ No unnecessary loops
+✓ Cache frequently used values
+✓ Fast execution (under 5ms per OnTick)
+✓ Memory efficient
+✓ Compile with ZERO errors
+✓ Compile with ZERO warnings
+✓ Production quality
+✓ Institutional quality
+
+DOCUMENTATION:
+✓ Comment important parts clearly
+✓ Function headers with purpose
+✓ State diagrams for complex logic
+✓ Explicit reasoning for design decisions
+✓ Warning comments on trap-prone areas
+
+TESTING & VALIDATION:
+✓ Every module initializes correctly
+✓ Every filter behaves as expected
+✓ Risk controls never fail
+✓ No duplicate trades
+✓ No repainting verified
+✓ No future-data leakage verified
+✓ No invalid entries
+✓ Memory usage stable
+✓ Execution speed meets standards
+✓ Zero warnings, zero errors on compile
+✓ Call graph verified end-to-end
+
+
+IMPLEMENTATION PHASING STRATEGY
+================================================================================
+Build in phases so code stays clean and stable:
+
+Phase 1:   Core Framework (inputs, symbol, ATR, sessions, risk anchors)
+Phase 2:   Market Structure & Bias (swings, BOS, displacement, pullback)
+Phase 3:   Liquidity Engine (equal highs/lows, session levels, ranking)
+Phase 4:   Market Objective & Premium/Discount
+Phase 5:   Narrative Engines (Daily + Institutional)
+Phase 6:   Multi-Timeframe Confluence
+Phase 7:   Kill Zone & Timing Engine
+Phase 8:   Execution Models (Sentinel, Vanguard, Catalyst, Ignition)
+Phase 9:   Trade Quality & Decision Engine
+Phase 10:  Risk & Trade Management
+Phase 11:  Statistics & Adaptive Learning
+Phase 12:  SMC Engine (BOS, MSS, CHoCH, structure hierarchy)
+Phase 13:  Order Block Engine
+Phase 14:  Fair Value Gap Engine
+Phase 15:  Liquidity Sweep Engine
+Phase 16:  Execution Precision Engine
+Phase 17:  Dynamic Target Engine
+Phase 18:  Confidence Scoring Engine
+Phase 19:  Dashboard Engine
+Phase 20:  Production Optimization
+Phase 21:  Delivery Algorithm Engine
+Phase 22:  Market Cycle Engine
+Phase 23:  Manipulation Engine
+Phase 24:  Volatility Intelligence Engine
+Phase 25:  News & Macro Filter
+Phase 26:  Institutional Risk Engine
+Phase 27:  Execution Optimization Engine
+Phase 28:  Performance Analytics Engine
+Phase 29:  Strategy Validation Engine
+Phase 30:  Master Decision Engine
+Phase 31:  Liquidity Probability Engine
+Phase 32:  Institutional Order Flow Engine
+Phase 33:  Market Efficiency Engine
+Phase 34:  Smart Risk Allocation Engine
+Phase 35:  Trade Lifecycle Engine
+Phase 36:  Position Management Engine
+Phase 37:  Institutional Confirmation Engine
+Phase 38:  False Signal Filter
+Phase 39:  Trade Journal Intelligence
+Phase 40:  Validation Suite & Production Release
+
+
+FINAL GOAL
+================================================================================
+Create a complete, production-ready LES Pro X v1.0 institutional-grade Expert Advisor
+that evaluates:
+
+1. Market Environment
+2. Institutional Narrative
+3. Market Objective
+4. Liquidity Map
+5. Market Structure
+6. Premium/Discount Location
+7. Kill Zone Timing
+8. Execution Model Trigger
+9. Risk Validation
+10. Trade Quality Grade
+
+...BEFORE entering a single trade.
+
+The system must think like an institutional trader:
+- Never force entries
+- Never override structural failures
+- Never ignore risk rules
+- Never chase low-probability trades
+- Always require unanimous institutional alignment
+- Always preserve capital above profit
+- Always optimize for quality over quantity
+
+================================================================================
+END OF SPECIFICATION
+================================================================================
